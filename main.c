@@ -2,7 +2,9 @@
 #include <windows.h>
 #include <stdlib.h>
 #include "endian.h"
-int note, tempo;
+#include <string.h>
+#include "shapeprint.h"
+long int note, tempo , showtick=4;
 void readType(char type[], FILE* file); //reading type of header 
 void readLength(int length, FILE* file); //reading length of header
 void readFormat(int format, FILE* file); //reading format of header
@@ -14,13 +16,23 @@ int eventtype(FILE* file); //finding the even which we need
 double getfreq(int note); //replacing note with proper frequance
 int main()
 {
-	
-    FILE* file = fopen("Ed_Sheeran_Shape_of_You_midi_by.mid", "rb");
     char type[5];
-    int length=0, track=0, format=0, division=0, tracklength=0, i=0, j = 0, Note=0, freq=0 , delta=0;
+    int length=0, track=0, format=0, division=0, tracklength=0, i=0, j = 0, Note=0, freq=0 , delta=0,choose , wrongeevent=0,end=0,shapetype=0,stop=0;
     int event=0;
     int flag=0;
     double lengthnote,notefreq;
+    char strname[500];
+    int temp=0,count=1;
+    while(1)
+	{	
+		end=0;
+		wrongeevent=0;
+	printf("\t\t\t\t!!MUSIC PLAYER!!\n\n\n\n");
+    printf("You can choose between the current playlist or u can just write the address\n ");
+    printf("\r1.Lacrimosa.mid\n2.forelise.mid\n3.shapeofyou.mid\n4.morse_code.mid\n\n");
+    printf("ATTENTION!!\nDontforget to use (.mid)at the end of files\n\nMusic or address:");
+    scanf("%s",strname);
+    FILE* file = fopen(strname, "rb");
     readType(type, file);
     readLength(length, file);
     readFormat(format, file);
@@ -37,10 +49,11 @@ int main()
         
         if (flag == -1)
         {
-        	printf("error"); //not finding any event
-            exit(1);
+        	printf("error of the file"); //not finding any event
+        	wrongeevent=1;
+            break;
         }
-        if (flag == 2)
+        if (flag == 2) //note off & note on
         {
             notefreq = getfreq(note);
 
@@ -53,19 +66,45 @@ int main()
             lengthnote= 60000 / duration;
 
             lengthnote *= delta;
-			lengthnote-=((lengthnote/100)*50);
+	    lengthnote-=((lengthnote/100)*50);
             Beep(notefreq+30, lengthnote);
             
+            
         }
-        if(flag==-2)
+        
+        if(flag==-2) // finding event ff2f
 		{
-			("ending track");
+			printf("ending track");
+			break;
 		}
-    }while(flag!=-2); // finding event ff2f
+		
+    }while(1);
+    if(wrongeevent)
+    {	end=1;
+    	break;
 	}
-	printf("\n\n\n\n");
-	printf("THEEND");
-//	fclose(infile);
+	}
+	if(end!=1)
+	{
+		printf("\n\n\n\n");
+		printf("THEEND\n\n\n\n");
+	}
+	
+	fclose(file);
+	printf("do you want to continue?\nyes=1\nno=0\n");
+	scanf("%d",&choose);
+	
+
+	if(choose==0)
+	{
+		break;	
+	}
+	
+	}
+	printf("\n\n\n");
+	printf("\t\t\t!!THANKS FOR USING THIS PLAYER!!\n\n\n\n\r");
+	getch();
+    
 	return(1);
     
 
@@ -165,16 +204,17 @@ int eventtype(FILE* file)
 
     if (event >= 0x80 && event < 0x90) // note off
     {
-
-        puts("find NOTE event");
+		
+       // puts("find NOTE event");
         fread(&note, 1, 1, file);
         fread(marg, 1, 1, file);
-        return 2;
-
+        showtime(showtick++);
+		return 2;
+		
     }
     else if(event >= 0x90 && event < 0xA0){ //note on
 
-        puts("find NOTE event");
+       // puts("find NOTE event");
         fread(&note, 1, 1, file);
         fread(marg, 1, 1, file);
 
@@ -200,7 +240,7 @@ int eventtype(FILE* file)
     }
     else if (event == 0xFF) // ff event
     {
-        puts("find FF event");
+        //puts("find FF event");
         fread(&type, 1, 1, file);
 
         if (type == 0x51)              //tempo
